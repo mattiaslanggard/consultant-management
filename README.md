@@ -76,41 +76,6 @@ The Consultant Management System is a web application designed to manage consult
 6. **Generate Reports**:
     Navigate to `http://localhost:8080/report` to generate and view reports on consultant activities.
 
-## Project Structure
-consultant-management/ 
-├── backend/ 
-│   ├── cmd/ 
-│   │   └── consultant-management/ 
-│   │       └── main.go 
-│   ├── internal/ 
-│   │   ├── db/ 
-│   │   │   └── db.go 
-│   │   ├── handlers/ 
-│   │   │   ├── auth.go 
-│   │   │   ├── consultants.go 
-│   │   │   ├── dashboard.go 
-│   │   │   └── report.go 
-│   │   └── middleware/ 
-│   │       └── auth.go 
-│   └── pkg/ 
-│       └── models/ 
-│           └── models.go 
-├── frontend/ 
-│   ├── static/ 
-│   │   └── css/ 
-│   │       └── styles.css 
-│   └── templates/ 
-│       ├── base.html 
-│       ├── consultants.html 
-│       ├── dashboard.html 
-│       ├── edit_form.html 
-│       ├── login.html 
-│       ├── register.html 
-│       └── report.html 
-├── .env 
-├── .gitignore 
-└── README.md
-
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
