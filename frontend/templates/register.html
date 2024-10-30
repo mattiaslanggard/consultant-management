@@ -1,0 +1,14 @@
+{{ define "content" }}
+<h1 class="text-2xl font-bold mb-5">Register</h1>
+<form action="/register" method="POST">
+    <div class="mb-4">
+        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+        <input type="text" name="username" id="username" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" name="password" id="password" class="mt-1 block w-full" required>
+    </div>
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Register</button>
+</form>
+{{ end }}

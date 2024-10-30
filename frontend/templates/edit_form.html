@@ -1,0 +1,16 @@
+<form action="/consultants/{{ .ID }}" method="POST" hx-post="/consultants/{{ .ID }}" hx-target="#consultant-list" hx-swap="outerHTML">
+    <input type="hidden" name="id" value="{{ .ID }}">
+    <div class="mb-4">
+        <label for="edit-name" class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" name="name" id="edit-name" value="{{ .Name }}" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="edit-hours-available" class="block text-sm font-medium text-gray-700">Hours Available</label>
+        <input type="number" name="hours_available" id="edit-hours-available" value="{{ .HoursAvailable }}" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="edit-skillset" class="block text-sm font-medium text-gray-700">Skillset</label>
+        <input type="text" name="skillset" id="edit-skillset" value="{{ .Skillset }}" class="mt-1 block w-full" required>
+    </div>
+    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Update Consultant</button>
+</form>

@@ -1,0 +1,38 @@
+{{ define "content" }}
+<h1 class="text-2xl font-bold mb-5">Consultants</h1>
+<form action="/consultants" method="POST" hx-post="/consultants" hx-target="#consultant-list" hx-swap="outerHTML">
+    <h2 class="text-lg font-semibold">Add Consultant</h2>
+    <div class="mb-4">
+        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" name="name" id="name" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="hours_available" class="block text-sm font-medium text-gray-700">Hours Available</label>
+        <input type="number" name="hours_available" id="hours_available" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="skillset" class="block text-sm font-medium text-gray-700">Skillset</label>
+        <input type="text" name="skillset" id="skillset" class="mt-1 block w-full" required>
+    </div>
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add Consultant</button>
+</form>
+
+<h2 class="text-lg font-semibold mt-10">Consultant List</h2>
+<div id="consultant-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+    {{ range .Consultants }}
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-4">
+        <h3 class="text-lg font-semibold">{{ .Name }}</h3>
+        <p>Available Hours: {{ .HoursAvailable }}</p>
+        <p>Skills: {{ .Skillset }}</p>
+        <button hx-get="/consultants/{{ .ID }}/edit" hx-target="#edit-form" hx-swap="innerHTML" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded mt-2">Edit</button>
+        <form action="/consultants/{{ .ID }}/delete" method="POST" hx-delete="/consultants/{{ .ID }}" hx-target="#consultant-list" hx-swap="outerHTML" class="mt-2">
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded">Delete</button>
+        </form>
+    </div>
+    {{ else }}
+    <p>No consultants found</p>
+    {{ end }}
+</div>
+
+<div id="edit-form" class="mt-10"></div>
+{{ end }}

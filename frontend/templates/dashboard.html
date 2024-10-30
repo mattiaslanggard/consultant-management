@@ -1,0 +1,20 @@
+{{ define "content" }}
+<h1 class="text-2xl font-bold mb-5">Dashboard</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+    <div class="card bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-lg font-semibold">Consultants</h2>
+        <p>Number of Consultants: {{ .NumConsultants }}</p>
+        <a href="/consultants" class="text-blue-500">Go to Consultants</a>
+    </div>
+    <div class="card bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-lg font-semibold">Tasks</h2>
+        <p>Number of Tasks: {{ .NumTasks }}</p>
+        <a href="/tasks" class="text-blue-500">Go to Tasks</a>
+    </div>
+    <div class="card bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-lg font-semibold">Reports</h2>
+        <p>Generate reports here.</p>
+        <a href="/report" class="text-blue-500">Go to Reports</a>
+    </div>
+</div>
+{{ end }}
