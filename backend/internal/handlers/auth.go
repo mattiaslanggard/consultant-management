@@ -148,6 +148,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
+// Logout handler
+func Logout(w http.ResponseWriter, r *http.Request) {
+	// Clear the authentication cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:   "token",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	})
+
+	// Redirect to the login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
 // Middleware to protect routes
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

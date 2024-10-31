@@ -9,8 +9,8 @@
 
 # Go workspace
 bin/
-pkg/
 vendor/
+tmp/
 
 # Go modules
 go.sum

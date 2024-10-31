@@ -9,30 +9,37 @@
     <script src="https://unpkg.com/htmx.org@1.6.1"></script>
 </head>
 <body class="bg-gray-100">
-    <div class="flex">
+    <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <div class="w-64 bg-blue-800 text-white h-screen">
+        <div class="w-64 bg-blue-800 text-white flex flex-col">
             <div class="p-4">
                 <h1 class="text-2xl font-bold">Consultant Management</h1>
             </div>
-            <nav class="mt-10">
-                <a href="/login" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Login</a>
-                <a href="/register" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Register</a>
+            <nav class="mt-10 flex-grow">
                 <a href="/dashboard" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Dashboard</a>
                 <a href="/consultants" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Consultants</a>
                 <a href="/report" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Reports</a>
+                <a href="/tasks" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Tasks</a>
             </nav>
+            <div>
+                {{ if .IsAuthenticatedKey }}
+                <a href="/logout" class="block py-2.5 px-4 transition duration-200 bg-red-500 hover:bg-red-700 text-white">Logout</a>
+                {{ else }}
+                <a href="/register" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Register</a>
+                <a href="/login" class="block py-2.5 px-4 transition duration-200 bg-green-700 hover:bg-green-700">Login</a>
+                {{ end }}
+            </div>
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1">
+        <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Banner -->
             <div class="bg-blue-600 text-white p-4">
                 <h2 class="text-xl font-semibold">Welcome to the Consultant Management System</h2>
             </div>
 
             <!-- Content -->
-            <div class="container mx-auto mt-10 p-4">
+            <div class="container mx-auto mt-10 p-4 flex-grow overflow-y-auto">
                 {{ block "content" . }}{{ end }}
             </div>
         </div>

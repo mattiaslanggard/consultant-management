@@ -16,14 +16,16 @@ type Claims struct {
 
 type contextKey string
 
-const usernameKey contextKey = "username"
+const IsAuthenticatedKey contextKey = "isAuthenticated"
 
+// AuthMiddleware to protect routes
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("token")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				ctx := context.WithValue(r.Context(), IsAuthenticatedKey, false)
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -32,7 +34,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		tokenStr := c.Value
 		claims := &Claims{}
-
 		tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
@@ -49,7 +50,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "username", claims.Username)
+		ctx := context.WithValue(r.Context(), IsAuthenticatedKey, true)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// GetIsAuthenticated retrieves the isAuthenticated value from the context
+func GetIsAuthenticated(r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(IsAuthenticatedKey).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }

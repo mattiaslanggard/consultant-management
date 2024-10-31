@@ -1,0 +1,12 @@
+# .air.toml
+
+root = "/home/mattias/consultant-management/"
+tmp_dir="/backend/cmd/consultant-management/tmp"
+[build]
+cmd = "go build -o ./tmp/main ."
+bin = "./tmp/main"
+include_ext = ["go", "tpl", "tmpl", "html"]
+exclude_dir = ["vendor", "tmp", "frontend/static"]
+include_dir = ["backend"]
+exclude_file = [".air.toml"]
+log = "debug"

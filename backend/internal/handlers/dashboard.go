@@ -2,38 +2,15 @@ package handlers
 
 import (
 	"consultant-management/backend/internal/db"
+	"consultant-management/backend/internal/middleware"
+	"consultant-management/backend/pkg/viewmodels"
 	"html/template"
 	"log"
 	"net/http"
 )
 
-type DashboardData struct {
-	NumConsultants int
-	NumTasks       int
-}
-
 // RenderDashboardPage handler
 func RenderDashboardPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles(
-		"/home/mattias/consultant-management/frontend/templates/base.html",
-		"/home/mattias/consultant-management/frontend/templates/dashboard.html",
-	)
-	if err != nil {
-		log.Printf("Error parsing templates: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.ExecuteTemplate(w, "base", map[string]interface{}{
-		"Title": "Dashboard",
-	})
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-func Dashboard(w http.ResponseWriter, r *http.Request) {
 	conn := db.GetDB()
 
 	// Fetch the number of consultants
@@ -52,11 +29,26 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := DashboardData{
-		NumConsultants: numConsultants,
-		NumTasks:       numTasks,
+	tmpl, err := template.ParseFiles(
+		"/home/mattias/consultant-management/frontend/templates/base.html",
+		"/home/mattias/consultant-management/frontend/templates/dashboard.html",
+	)
+	if err != nil {
+		log.Printf("Error parsing templates: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("/home/mattias/consultant-management/frontend/templates/dashboard.html"))
-	tmpl.Execute(w, data)
+	isAuthenticatedKey := middleware.GetIsAuthenticated(r)
+
+	err = tmpl.ExecuteTemplate(w, "base", viewmodels.DashboardData{
+		Title:              "Dashboard",
+		NumTasks:           numTasks,
+		NumConsultants:     numConsultants,
+		IsAuthenticatedKey: isAuthenticatedKey,
+	})
+	if err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }

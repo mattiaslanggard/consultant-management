@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"consultant-management/backend/internal/db"
-	"consultant-management/backend/pkg/models"
+	"consultant-management/backend/internal/middleware"
+	"consultant-management/backend/pkg/viewmodels"
 	"html/template"
 	"log"
 	"net/http"
@@ -18,9 +19,9 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	consultants := []models.ConsultantReport{}
+	consultants := []viewmodels.ConsultantReport{}
 	for rows.Next() {
-		var c models.ConsultantReport
+		var c viewmodels.ConsultantReport
 		var consultantID int
 		if err := rows.Scan(&consultantID, &c.Name, &c.HoursAvailable); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,9 +36,9 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 		}
 		defer taskRows.Close()
 
-		tasks := []models.TaskReport{}
+		tasks := []viewmodels.TaskReport{}
 		for taskRows.Next() {
-			var t models.TaskReport
+			var t viewmodels.TaskReport
 			if err := taskRows.Scan(&t.CustomerName, &t.TaskDescription, &t.AssignedHours, &t.Status, &t.Deadline); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -59,9 +60,12 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", map[string]interface{}{
-		"Title":       "Consultant Report",
-		"Consultants": consultants,
+	isAuthenticatedKey := middleware.GetIsAuthenticated(r)
+
+	err = tmpl.ExecuteTemplate(w, "base", viewmodels.ReportData{
+		Title:              "Consultant Report",
+		Consultants:        consultants,
+		IsAuthenticatedKey: isAuthenticatedKey,
 	})
 	if err != nil {
 		log.Printf("Error executing template: %v", err)

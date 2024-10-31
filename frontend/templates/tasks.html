@@ -1,0 +1,27 @@
+{{ define "content" }}
+<h1 class="text-2xl font-bold mb-5">Tasks</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {{ range .CustomerTasks }}
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-4">
+        <h2 class="text-lg font-semibold">{{ .CustomerName }}</h2>
+        <ul>
+            {{ range .Tasks }}
+            <li class="mb-2">
+                <p><strong>Description:</strong> {{ .TaskDescription }}</p>
+                <p><strong>Assigned Hours:</strong> {{ .AssignedHours }}</p>
+                <p><strong>Deadline:</strong> {{ .Deadline }}</p>
+                <p><strong>Status:</strong> {{ .Status }}</p>
+                <form method="POST" hx-delete="/tasks/{{ .ID }}/delete" hx-target="#task-list" hx-swap="outerHTML">
+                    <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded mt-2">Delete</button>
+                </form>
+            </li>
+            {{ else }}
+            <li>No tasks found</li>
+            {{ end }}
+        </ul>
+    </div>
+    {{ else }}
+    <p>No tasks found</p>
+    {{ end }}
+</div>
+{{ end }}

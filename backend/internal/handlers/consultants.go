@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"consultant-management/backend/internal/db"
+	"consultant-management/backend/internal/middleware"
 	"consultant-management/backend/pkg/models"
+	"consultant-management/backend/pkg/viewmodels"
 	"html/template"
 	"log"
 	"net/http"
@@ -41,9 +43,12 @@ func RenderConsultantsPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", map[string]interface{}{
-		"Title":       "Consultants",
-		"Consultants": consultants,
+	isAuthenticatedKey := middleware.GetIsAuthenticated(r)
+
+	err = tmpl.ExecuteTemplate(w, "base", viewmodels.ConsultantsData{
+		Title:              "Consultants",
+		Consultants:        consultants,
+		IsAuthenticatedKey: isAuthenticatedKey,
 	})
 	if err != nil {
 		log.Printf("Error executing template: %v", err)

@@ -25,7 +25,7 @@
         <p>Available Hours: {{ .HoursAvailable }}</p>
         <p>Skills: {{ .Skillset }}</p>
         <button hx-get="/consultants/{{ .ID }}/edit" hx-target="#edit-form" hx-swap="innerHTML" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded mt-2">Edit</button>
-        <form action="/consultants/{{ .ID }}/delete" method="POST" hx-delete="/consultants/{{ .ID }}" hx-target="#consultant-list" hx-swap="outerHTML" class="mt-2">
+        <form method="POST" hx-delete="/consultants/{{ .ID }}/delete" hx-target="#consultant-list" hx-swap="outerHTML" class="mt-2">
             <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded">Delete</button>
         </form>
     </div>
