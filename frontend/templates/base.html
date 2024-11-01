@@ -17,9 +17,11 @@
             </div>
             <nav class="mt-10 flex-grow">
                 <a href="/dashboard" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Dashboard</a>
+                {{ if .IsAuthenticatedKey }}
                 <a href="/consultants" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Consultants</a>
                 <a href="/report" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Reports</a>
                 <a href="/tasks" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">Tasks</a>
+                {{ end }}
             </nav>
             <div>
                 {{ if .IsAuthenticatedKey }}

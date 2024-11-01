@@ -3,21 +3,41 @@ package handlers
 import (
 	"consultant-management/backend/internal/db"
 	"consultant-management/backend/internal/middleware"
+	"consultant-management/backend/internal/utils"
 	"consultant-management/backend/pkg/viewmodels"
 	"html/template"
-	"log"
 	"net/http"
 )
 
 // RenderDashboardPage handler
 func RenderDashboardPage(w http.ResponseWriter, r *http.Request) {
+	isAuthenticated := middleware.GetIsAuthenticated(r)
+
+	var tmpl *template.Template
+	var err error
+	if isAuthenticated {
+		tmpl, err = template.ParseFiles(
+			"/home/mattias/consultant-management/frontend/templates/base.html",
+			"/home/mattias/consultant-management/frontend/templates/dashboard_authenticated.html",
+		)
+	} else {
+		tmpl, err = template.ParseFiles(
+			"/home/mattias/consultant-management/frontend/templates/base.html",
+			"/home/mattias/consultant-management/frontend/templates/dashboard_unauthenticated.html",
+		)
+	}
+	if err != nil {
+		utils.HandleError(w, err, "Error parsing templates", http.StatusInternalServerError)
+		return
+	}
+
 	conn := db.GetDB()
 
 	// Fetch the number of consultants
 	var numConsultants int
-	err := conn.QueryRow("SELECT COUNT(*) FROM consultants").Scan(&numConsultants)
+	err = conn.QueryRow("SELECT COUNT(*) FROM consultants").Scan(&numConsultants)
 	if err != nil {
-		http.Error(w, "Failed to fetch number of consultants", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to fetch number of consultants", http.StatusInternalServerError)
 		return
 	}
 
@@ -25,30 +45,19 @@ func RenderDashboardPage(w http.ResponseWriter, r *http.Request) {
 	var numTasks int
 	err = conn.QueryRow("SELECT COUNT(*) FROM tasks").Scan(&numTasks)
 	if err != nil {
-		http.Error(w, "Failed to fetch number of tasks", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to fetch number of tasks", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl, err := template.ParseFiles(
-		"/home/mattias/consultant-management/frontend/templates/base.html",
-		"/home/mattias/consultant-management/frontend/templates/dashboard.html",
-	)
-	if err != nil {
-		log.Printf("Error parsing templates: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	isAuthenticatedKey := middleware.GetIsAuthenticated(r)
-
-	err = tmpl.ExecuteTemplate(w, "base", viewmodels.DashboardData{
+	data := viewmodels.DashboardData{
 		Title:              "Dashboard",
 		NumTasks:           numTasks,
 		NumConsultants:     numConsultants,
-		IsAuthenticatedKey: isAuthenticatedKey,
-	})
+		IsAuthenticatedKey: isAuthenticated,
+	}
+
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error executing template", http.StatusInternalServerError)
 	}
 }

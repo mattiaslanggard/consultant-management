@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"consultant-management/backend/internal/utils"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -24,11 +26,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		c, err := r.Cookie("token")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				ctx := context.WithValue(r.Context(), IsAuthenticatedKey, false)
-				next.ServeHTTP(w, r.WithContext(ctx))
+				utils.HandleError(w, err, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.HandleError(w, err, "Bad request", http.StatusBadRequest)
 			return
 		}
 
@@ -39,14 +40,56 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		})
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.HandleError(w, err, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.HandleError(w, err, "Bad request", http.StatusBadRequest)
 			return
 		}
 		if !tkn.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.HandleError(w, err, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), IsAuthenticatedKey, true)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// SetAuthContext sets the isAuthenticated context value without blocking access
+func SetAuthContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := r.Cookie("token")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				// Set isAuthenticated to false and continue
+				ctx := context.WithValue(r.Context(), IsAuthenticatedKey, false)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+			utils.HandleError(w, err, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		tokenStr := c.Value
+		claims := &Claims{}
+		tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+		if err != nil {
+			if err == jwt.ErrSignatureInvalid {
+				// Set isAuthenticated to false and continue
+				ctx := context.WithValue(r.Context(), IsAuthenticatedKey, false)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+			utils.HandleError(w, err, "Bad request", http.StatusBadRequest)
+			return
+		}
+		if !tkn.Valid {
+			// Set isAuthenticated to false and continue
+			ctx := context.WithValue(r.Context(), IsAuthenticatedKey, false)
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 

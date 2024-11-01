@@ -8,6 +8,7 @@ import (
 
 	"consultant-management/backend/internal/db"
 	"consultant-management/backend/internal/handlers"
+	"consultant-management/backend/internal/logger"
 	"consultant-management/backend/internal/middleware"
 
 	"github.com/gorilla/mux"
@@ -20,6 +21,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	// Initialize logger
+	logger.Init()
+
 	// Read database credentials from environment variables
 	dbUser := os.Getenv("DB_USER")
 	dbName := os.Getenv("DB_NAME")
@@ -29,32 +34,37 @@ func main() {
 	connStr := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=%s", dbUser, dbName, dbPassword, dbSSLMode)
 	err = db.InitDB(connStr)
 	if err != nil {
-		log.Fatal(err)
+		logger.ErrorLogger.Fatal(err)
 	}
 	defer db.CloseDB()
 
 	// Set up the router
 	router := mux.NewRouter()
-	router.Use(middleware.AuthMiddleware)
 	router.HandleFunc("/register", handlers.Register).Methods("POST")
 	router.HandleFunc("/login", handlers.Login).Methods("POST")
 	router.HandleFunc("/login", handlers.LoginPage).Methods("GET")
 	router.HandleFunc("/register", handlers.RegisterPage).Methods("GET")
+
+	// Apply SetAuthContext middleware to public routes
+	router.Use(middleware.SetAuthContext)
 	router.HandleFunc("/dashboard", handlers.RenderDashboardPage).Methods("GET")
 
 	// Apply authentication middleware to protected routes
 	protected := router.PathPrefix("/").Subrouter()
 	protected.Use(middleware.AuthMiddleware)
 	protected.HandleFunc("/logout", handlers.Logout).Methods("GET")
+	// Consultants routes
 	protected.HandleFunc("/consultants", handlers.RenderConsultantsPage).Methods("GET")
-	protected.HandleFunc("/report", handlers.RenderReportPage).Methods("GET")
 	protected.HandleFunc("/consultants", handlers.AddConsultant).Methods("POST")
 	protected.HandleFunc("/consultants/{id}", handlers.EditConsultant).Methods("POST")
 	protected.HandleFunc("/consultants/{id}/edit", handlers.EditConsultantForm).Methods("GET")
 	protected.HandleFunc("/consultants/{id}/delete", handlers.DeleteConsultant).Methods("DELETE")
+	// Task routes
 	protected.HandleFunc("/assign_task", handlers.AssignTask).Methods("POST")
 	protected.HandleFunc("/tasks", handlers.ListTasks).Methods("GET")
 	protected.HandleFunc("/tasks/{id}/delete", handlers.DeleteTask).Methods("DELETE")
+	// Report routes
+	protected.HandleFunc("/report", handlers.RenderReportPage).Methods("GET")
 
 	// Serve static files
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))

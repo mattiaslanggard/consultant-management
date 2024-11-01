@@ -3,10 +3,10 @@ package handlers
 import (
 	"consultant-management/backend/internal/db"
 	"consultant-management/backend/internal/middleware"
+	"consultant-management/backend/internal/utils"
 	"consultant-management/backend/pkg/models"
 	"consultant-management/backend/pkg/viewmodels"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -25,7 +25,7 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
         ORDER BY customer_name
     `)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error fetching tasks", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -34,7 +34,7 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var task models.Task
 		if err := rows.Scan(&task.ID, &task.ConsultantID, &task.CustomerName, &task.TaskDescription, &task.AssignedHours, &task.Deadline, &task.Status); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			utils.HandleError(w, err, "Error scanning task", http.StatusInternalServerError)
 			return
 		}
 		tasksByCustomer[task.CustomerName] = append(tasksByCustomer[task.CustomerName], task)
@@ -53,8 +53,7 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 		"/home/mattias/consultant-management/frontend/templates/tasks.html",
 	)
 	if err != nil {
-		log.Printf("Error parsing templates: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error parsing templates", http.StatusInternalServerError)
 		return
 	}
 
@@ -66,8 +65,7 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 		IsAuthenticatedKey: isAuthenticatedKey,
 	})
 	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error executing template", http.StatusInternalServerError)
 	}
 }
 
@@ -76,14 +74,14 @@ func AssignTask(w http.ResponseWriter, r *http.Request) {
 	conn := db.GetDB()
 	// Parse form data
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		utils.HandleError(w, err, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
 	// Decode form values into the Task struct
 	var task models.Task
 	if err := decoder.Decode(&task, r.PostForm); err != nil {
-		http.Error(w, "Failed to parse task data", http.StatusBadRequest)
+		utils.HandleError(w, err, "Failed to decode form data", http.StatusBadRequest)
 		return
 	}
 
@@ -95,7 +93,7 @@ func AssignTask(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "Failed to assign task", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to insert task", http.StatusInternalServerError)
 		return
 	}
 
@@ -107,14 +105,14 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+		utils.HandleError(w, err, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
 	conn := db.GetDB()
 	_, err = conn.Exec("DELETE FROM tasks WHERE id = $1", id)
 	if err != nil {
-		http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to delete task", http.StatusInternalServerError)
 		return
 	}
 

@@ -3,9 +3,9 @@ package handlers
 import (
 	"consultant-management/backend/internal/db"
 	"consultant-management/backend/internal/middleware"
+	"consultant-management/backend/internal/utils"
 	"consultant-management/backend/pkg/viewmodels"
 	"html/template"
-	"log"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 	conn := db.GetDB()
 	rows, err := conn.Query("SELECT id, name, hours_available FROM consultants")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error fetching consultants", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -24,14 +24,14 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 		var c viewmodels.ConsultantReport
 		var consultantID int
 		if err := rows.Scan(&consultantID, &c.Name, &c.HoursAvailable); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			utils.HandleError(w, err, "Error scanning consultant", http.StatusInternalServerError)
 			return
 		}
 
 		// Fetch tasks for each consultant
 		taskRows, err := conn.Query("SELECT customer_name, task_description, assigned_hours, status, deadline FROM tasks WHERE consultant_id = $1", consultantID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			utils.HandleError(w, err, "Error fetching tasks", http.StatusInternalServerError)
 			return
 		}
 		defer taskRows.Close()
@@ -40,7 +40,7 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 		for taskRows.Next() {
 			var t viewmodels.TaskReport
 			if err := taskRows.Scan(&t.CustomerName, &t.TaskDescription, &t.AssignedHours, &t.Status, &t.Deadline); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				utils.HandleError(w, err, "Error scanning task", http.StatusInternalServerError)
 				return
 			}
 			tasks = append(tasks, t)
@@ -55,8 +55,7 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 		"/home/mattias/consultant-management/frontend/templates/report.html",
 	)
 	if err != nil {
-		log.Printf("Error parsing templates: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error parsing templates", http.StatusInternalServerError)
 		return
 	}
 
@@ -68,7 +67,6 @@ func RenderReportPage(w http.ResponseWriter, r *http.Request) {
 		IsAuthenticatedKey: isAuthenticatedKey,
 	})
 	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error executing template", http.StatusInternalServerError)
 	}
 }

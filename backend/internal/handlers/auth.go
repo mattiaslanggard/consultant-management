@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"consultant-management/backend/internal/db"
+	"consultant-management/backend/internal/logger"
+	"consultant-management/backend/internal/utils"
 	"consultant-management/backend/pkg/models"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
 
@@ -14,22 +15,28 @@ import (
 
 // LoginPage handler
 func LoginPage(w http.ResponseWriter, r *http.Request) {
+	renderLoginPage(w, "")
+}
+
+// renderLoginPage renders the login page with an optional error message
+func renderLoginPage(w http.ResponseWriter, errorMessage string) {
 	tmpl, err := template.ParseFiles(
 		"/home/mattias/consultant-management/frontend/templates/base.html",
 		"/home/mattias/consultant-management/frontend/templates/login.html",
 	)
 	if err != nil {
-		log.Printf("Error parsing templates: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error parsing templates", http.StatusInternalServerError)
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", map[string]interface{}{
-		"Title": "Login",
-	})
+	data := map[string]interface{}{
+		"Title":        "Login",
+		"ErrorMessage": errorMessage,
+	}
+
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error executing template", http.StatusInternalServerError)
 	}
 }
 
@@ -40,8 +47,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 		"/home/mattias/consultant-management/frontend/templates/register.html",
 	)
 	if err != nil {
-		log.Printf("Error parsing templates: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		logger.ErrorLogger.Printf("Error parsing templates: %v", err)
 		return
 	}
 
@@ -49,8 +55,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 		"Title": "Register",
 	})
 	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error executing template", http.StatusInternalServerError)
 	}
 }
 
@@ -65,7 +70,7 @@ type Claims struct {
 func Register(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		utils.HandleError(w, err, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
@@ -73,23 +78,24 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		utils.HandleError(w, nil, "Username and password are required", http.StatusBadRequest)
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
 	conn := db.GetDB()
 	_, err = conn.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", username, string(hashedPassword))
 	if err != nil {
-		http.Error(w, "Failed to register user", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Failed to register user", http.StatusInternalServerError)
 		return
 	}
 
+	logger.InfoLogger.Printf("User registered: %s", username)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
@@ -97,7 +103,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		utils.HandleError(w, err, "Error parsing form", http.StatusBadRequest)
 		return
 	}
 
@@ -105,7 +111,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		renderLoginPage(w, "Username and password are required")
 		return
 	}
 
@@ -114,13 +120,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var storedUser models.User
 	err = row.Scan(&storedUser.ID, &storedUser.Password)
 	if err != nil {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		renderLoginPage(w, "Invalid username or password")
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(password))
 	if err != nil {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		renderLoginPage(w, "Invalid username or password")
 		return
 	}
 
@@ -131,11 +137,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		utils.HandleError(w, err, "Error generating token", http.StatusInternalServerError)
 		return
 	}
 
@@ -145,6 +150,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Expires: expirationTime,
 	})
 
+	logger.InfoLogger.Printf("User logged in: %s", username)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
@@ -158,6 +164,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge: -1,
 	})
 
+	logger.InfoLogger.Println("User logged out")
 	// Redirect to the login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
@@ -168,10 +175,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		c, err := r.Cookie("token")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.HandleError(w, err, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.HandleError(w, err, "Bad request", http.StatusBadRequest)
 			return
 		}
 
@@ -183,17 +190,18 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		})
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				utils.HandleError(w, err, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.HandleError(w, err, "Bad request", http.StatusBadRequest)
 			return
 		}
 		if !tkn.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.HandleError(w, err, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
+		logger.InfoLogger.Printf("User authenticated: %s", claims.Username)
 		next.ServeHTTP(w, r)
 	})
 }
