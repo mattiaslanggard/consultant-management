@@ -65,6 +65,12 @@ func main() {
 	protected.HandleFunc("/tasks/{id}/delete", handlers.DeleteTask).Methods("DELETE")
 	// Report routes
 	protected.HandleFunc("/report", handlers.RenderReportPage).Methods("GET")
+	// Office routes
+	protected.HandleFunc("/offices", handlers.RenderOfficesPage).Methods("GET")
+	protected.HandleFunc("/offices", handlers.AddOffice).Methods("POST")
+	protected.HandleFunc("/offices/{id}", handlers.EditOffice).Methods("POST")
+	protected.HandleFunc("/offices/{id}/edit", handlers.EditOfficeForm).Methods("GET")
+	protected.HandleFunc("/offices/{id}/delete", handlers.DeleteOffice).Methods("DELETE")
 
 	// Serve static files
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))

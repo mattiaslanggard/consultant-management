@@ -45,3 +45,9 @@ type ReportData struct {
 	Consultants        []ConsultantReport
 	IsAuthenticatedKey bool
 }
+
+type OfficeData struct {
+	Title              string
+	Offices            []models.Office
+	IsAuthenticatedKey bool
+}

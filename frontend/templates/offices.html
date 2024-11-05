@@ -1,0 +1,27 @@
+{{ define "content" }}
+<h1 class="text-2xl font-bold mb-5">Offices</h1>
+<form action="/offices" method="POST" hx-post="/offices" hx-target="#office-list" hx-swap="outerHTML">
+    <h2 class="text-lg font-semibold">Add Office</h2>
+    <div class="mb-4">
+        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" name="name" id="name" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+        <input type="text" name="address" id="address" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="zip_code" class="block text-sm font-medium text-gray-700">Zip Code</label>
+        <input type="text" name="zip_code" id="zip_code" class="mt-1 block w-full" required>
+    </div>
+    <div class="mb-4">
+        <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+        <input type="text" name="country" id="country" class="mt-1 block w-full" required>
+    </div>
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add Office</button>
+</form>
+
+<h2 class="text-lg font-semibold mt-10">Office List</h2>
+{{ template "office_list" . }}
+<div id="edit-form" class="mt-10"></div>
+{{ end }}

@@ -1,0 +1,18 @@
+{{ define "office_list" }}
+<div id="office-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+    {{ range .Offices }}
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-4">
+        <h3 class="text-lg font-semibold">{{ .Name }}</h3>
+        <p>Address: {{ .Address }}</p>
+        <p>Zip Code: {{ .ZipCode }}</p>
+        <p>Country: {{ .Country }}</p>
+        <button hx-get="/offices/{{ .ID }}/edit" hx-target="#edit-form" hx-swap="innerHTML" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded mt-2">Edit</button>
+        <form hx-delete="/offices/{{ .ID }}/delete" hx-target="#office-list" hx-swap="outerHTML" class="mt-2">
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded">Delete</button>
+        </form>
+    </div>
+    {{ else }}
+    <p>No offices found</p>
+    {{ end }}
+</div>
+{{ end }}

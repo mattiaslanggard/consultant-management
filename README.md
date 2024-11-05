@@ -6,6 +6,7 @@ The Consultant Management System is a web application designed to manage consult
 
 - **User Authentication**: Secure login and registration system.
 - **Consultant Management**: Add, edit, and delete consultants.
+- **Office Management**: Add, edit, and delete office locations.
 - **Task Assignment**: Assign tasks to consultants.
 - **Reporting**: Generate and view reports on consultant activities.
 - **Consistent UI**: Sidebar and banner for consistent navigation and styling across all pages.
@@ -70,10 +71,13 @@ The Consultant Management System is a web application designed to manage consult
 4. **Manage Consultants**:
     Navigate to `http://localhost:8080/consultants` to add, edit, and delete consultants.
 
-5. **Assign Tasks**:
+5. **Manage Offices**:
+    Navigate to `http://localhost:8080/offices` to add, edit, and delete office locations.
+
+6. **Assign Tasks**:
     Use the task assignment form on the consultants page to assign tasks to consultants.
 
-6. **Generate Reports**:
+7. **Generate Reports**:
     Navigate to `http://localhost:8080/report` to generate and view reports on consultant activities.
 
 ## Contributing
