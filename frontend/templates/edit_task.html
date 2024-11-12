@@ -1,0 +1,12 @@
+<form id="edit-form-{{ .ID }}" method="POST" hx-put="/tasks/{{ .ID }}" hx-target="#task-{{ .ID }}" hx-swap="outerHTML">
+    <input type="hidden" name="_method" value="PUT">
+    <label for="description">Description:</label>
+    <input type="text" name="task_description" value="{{ .TaskDescription }}" class="border rounded py-1 px-2 mb-2">
+    <label for="assigned_hours">Assigned Hours:</label>
+    <input type="number" name="assigned_hours" value="{{ .AssignedHours }}" class="border rounded py-1 px-2 mb-2">
+    <label for="deadline">Deadline:</label>
+    <input type="date" name="deadline" value="{{ .Deadline.Format "2006-01-02" }}" class="border rounded py-1 px-2 mb-2">
+    <label for="status">Status:</label>
+    <input type="text" name="status" value="{{ .Status }}" class="border rounded py-1 px-2 mb-2">
+    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded mt-2">Update</button>
+</form>

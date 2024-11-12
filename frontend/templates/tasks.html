@@ -11,9 +11,11 @@
                 <p><strong>Assigned Hours:</strong> {{ .AssignedHours }}</p>
                 <p><strong>Deadline:</strong> {{ .Deadline }}</p>
                 <p><strong>Status:</strong> {{ .Status }}</p>
-                <form method="POST" hx-delete="/tasks/{{ .ID }}/delete" hx-target="#task-list" hx-swap="outerHTML">
+                <form method="POST" hx-delete="/tasks/{{ .ID }}/delete" hx-target="#task-{{ .ID }}" hx-swap="outerHTML">
                     <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded mt-2">Delete</button>
                 </form>
+                <button hx-get="/tasks/{{ .ID }}/edit" hx-target="#edit-form-{{ .ID }}" hx-swap="outerHTML" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mt-2">Edit</button>
+                <div id="edit-form-{{ .ID }}"></div>
             </li>
             {{ else }}
             <li>No tasks found</li>

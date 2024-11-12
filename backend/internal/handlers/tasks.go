@@ -6,6 +6,7 @@ import (
 	"consultant-management/backend/internal/utils"
 	"consultant-management/backend/pkg/models"
 	"consultant-management/backend/pkg/viewmodels"
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -69,6 +70,64 @@ func ListTasks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// EditTaskForm handler
+func EditTaskForm(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		utils.HandleError(w, err, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+
+	conn := db.GetDB()
+	row := conn.QueryRow(`
+        SELECT id, consultant_id, customer_name, task_description, assigned_hours, deadline, status, created_at
+        FROM tasks WHERE id = $1`, id)
+
+	var task models.Task
+	err = row.Scan(&task.ID, &task.ConsultantID, &task.CustomerName, &task.TaskDescription, &task.AssignedHours, &task.Deadline, &task.Status, &task.CreatedAt)
+	if err != nil {
+		utils.HandleError(w, err, "Failed to fetch task", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := template.ParseFiles("/home/mattias/consultant-management/frontend/templates/edit_task.html")
+	if err != nil {
+		utils.HandleError(w, err, "Error parsing template", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, task)
+	if err != nil {
+		utils.HandleError(w, err, "Error executing template", http.StatusInternalServerError)
+	}
+}
+
+// GetTask handler
+func GetTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		utils.HandleError(w, err, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+
+	conn := db.GetDB()
+	row := conn.QueryRow(`
+        SELECT id, consultant_id, customer_name, task_description, assigned_hours, deadline, status, created_at
+        FROM tasks WHERE id = $1`, id)
+
+	var task models.Task
+	err = row.Scan(&task.ID, &task.ConsultantID, &task.CustomerName, &task.TaskDescription, &task.AssignedHours, &task.Deadline, &task.Status, &task.CreatedAt)
+	if err != nil {
+		utils.HandleError(w, err, "Failed to fetch task", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(task)
+}
+
 // AssignTask handler
 func AssignTask(w http.ResponseWriter, r *http.Request) {
 	conn := db.GetDB()
@@ -94,6 +153,42 @@ func AssignTask(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		utils.HandleError(w, err, "Failed to insert task", http.StatusInternalServerError)
+		return
+	}
+
+	ListTasks(w, r)
+}
+
+// UpdateTask handler
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		utils.HandleError(w, err, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+
+	// Parse form data
+	if err := r.ParseForm(); err != nil {
+		utils.HandleError(w, err, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	// Decode form values into the Task struct
+	var task models.Task
+	if err := decoder.Decode(&task, r.PostForm); err != nil {
+		utils.HandleError(w, err, "Failed to decode form data", http.StatusBadRequest)
+		return
+	}
+
+	conn := db.GetDB()
+	_, err = conn.Exec(`
+        UPDATE tasks SET consultant_id = $1, customer_name = $2, task_description = $3, assigned_hours = $4, deadline = $5, status = $6
+        WHERE id = $7`,
+		task.ConsultantID, task.CustomerName, task.TaskDescription, task.AssignedHours, task.Deadline, task.Status, id,
+	)
+	if err != nil {
+		utils.HandleError(w, err, "Failed to update task", http.StatusInternalServerError)
 		return
 	}
 

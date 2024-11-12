@@ -62,6 +62,9 @@ func main() {
 	// Task routes
 	protected.HandleFunc("/assign_task", handlers.AssignTask).Methods("POST")
 	protected.HandleFunc("/tasks", handlers.ListTasks).Methods("GET")
+	protected.HandleFunc("/tasks/{id}", handlers.GetTask).Methods("GET")
+	protected.HandleFunc("/tasks/{id}", handlers.UpdateTask).Methods("PUT")
+	protected.HandleFunc("/tasks/{id}/edit", handlers.EditTaskForm).Methods("GET")
 	protected.HandleFunc("/tasks/{id}/delete", handlers.DeleteTask).Methods("DELETE")
 	// Report routes
 	protected.HandleFunc("/report", handlers.RenderReportPage).Methods("GET")
